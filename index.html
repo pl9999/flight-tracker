@@ -364,11 +364,11 @@ async function loadAircraft(){
   const center = map.getCenter();
   const radiusNm = 50;
 
-  const targetUrl = `https://api.airplanes.live/v2/point/${center.lat.toFixed(4)}/${center.lng.toFixed(4)}/${radiusNm}`;
-  const url = `https://api.allorigins.win/raw?url=` + encodeURIComponent(targetUrl);
+  // Direct query to adsb.lol (v2 supports standard web fetch headers on modern nodes)
+  const url = `https://api.adsb.lol/v2/point/${center.lat.toFixed(4)}/${center.lng.toFixed(4)}/${radiusNm}`;
 
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { mode: 'cors' });
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
 
@@ -376,8 +376,8 @@ async function loadAircraft(){
     updateMarkers(list);
     $("acCount").textContent = list.length.toLocaleString() + " aircraft";
   } catch(e) {
-    console.error("Live fetch failed:", e);
-    $("acCount").textContent = "offline — retrying";
+    console.error("Live fetch error:", e);
+    $("acCount").textContent = "API error (check view)";
   }
 }
 
