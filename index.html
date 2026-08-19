@@ -361,34 +361,21 @@ function startPolling(){
 
 async function loadAircraft(){
   if(!map) return;
-
-  // Fallback / Test mock data so the map and panels always display fully operational flights
-  const mockData = [
-    { hex: "4ca87c", flight: "IBE6825", lat: map.getCenter().lat + 0.05, lon: map.getCenter().lng + 0.05, alt_baro: 34000, gs: 450, track: 45, r: "EC-MNS", t: "A332" },
-    { hex: "3c445a", flight: "VLG1234", lat: map.getCenter().lat - 0.04, lon: map.getCenter().lng - 0.06, alt_baro: 24000, gs: 380, track: 180, r: "EC-JLV", t: "A320" },
-    { hex: "4401d8", flight: "BAW462 ", lat: map.getCenter().lat + 0.02, lon: map.getCenter().lng - 0.08, alt_baro: 12000, gs: 280, track: 270, r: "G-EUUI", t: "A321" }
-  ];
+  const center = map.getCenter();
+  const radiusNm = 50; // Radius in nautical miles
+  const url = `https://api.adsb.lol/v2/point/${center.lat.toFixed(4)}/${center.lng.toFixed(4)}/${radiusNm}`;
 
   try {
-    const center = map.getCenter();
-    const radiusNm = 50;
-    const url = `https://api.adsb.one/v2/point/${center.lat.toFixed(4)}/${center.lng.toFixed(4)}/${radiusNm}`;
-
     const res = await fetch(url);
-    if (!res.ok) throw new Error("API limit or network block");
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
 
     const list = data.ac || [];
-    if(list.length > 0) {
-      updateMarkers(list);
-      $("acCount").textContent = list.length.toLocaleString() + " aircraft";
-    } else {
-      throw new Error("No planes in view");
-    }
+    updateMarkers(list);
+    $("acCount").textContent = list.length.toLocaleString() + " aircraft";
   } catch(e) {
-    // If live API blocks or fails, load simulated flight paths so the UI is fully testable
-    updateMarkers(mockData);
-    $("acCount").textContent = mockData.length + " flights (Live simulated)";
+    console.error("Live fetch failed:", e);
+    $("acCount").textContent = "offline — retrying";
   }
 }
 
