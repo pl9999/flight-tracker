@@ -362,13 +362,12 @@ function startPolling(){
 async function loadAircraft(){
   if(!map) return;
   const center = map.getCenter();
-
-  // Format coordinates cleanly to 2 decimal places to ensure robust API matching
   const lat = center.lat.toFixed(2);
   const lng = center.lng.toFixed(2);
-  const radiusNm = 100; // Expanded radius to guarantee catching regional traffic around Barcelona
+  const radiusNm = 100;
 
-  const url = `https://api.adsb.one/v2/point/${lat}/${lng}/${radiusNm}`;
+  const targetUrl = `https://api.adsb.one/v2/point/${lat}/${lng}/${radiusNm}`;
+  const url = `https://corsproxy.io/?` + encodeURIComponent(targetUrl);
 
   try {
     const res = await fetch(url);
@@ -380,7 +379,7 @@ async function loadAircraft(){
     $("acCount").textContent = list.length.toLocaleString() + " aircraft";
   } catch(e) {
     console.error("Live fetch failed:", e);
-    $("acCount").textContent = "offline — retrying";
+    $("acCount").textContent = "API error (check view)";
   }
 }
 
