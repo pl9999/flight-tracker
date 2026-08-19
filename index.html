@@ -364,10 +364,7 @@ async function loadAircraft(){
   const center = map.getCenter();
   const radiusNm = 50;
 
-  // Target live endpoint
   const targetUrl = `https://api.airplanes.live/v2/point/${center.lat.toFixed(4)}/${center.lng.toFixed(4)}/${radiusNm}`;
-
-  // Route through a public CORS wrapper so the browser allows the response
   const url = `https://corsproxy.io/?` + encodeURIComponent(targetUrl);
 
   try {
