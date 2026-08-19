@@ -362,13 +362,16 @@ function startPolling(){
 async function loadAircraft(){
   if(!map) return;
   const center = map.getCenter();
-  const radiusNm = 50;
 
-  // Direct query to adsb.lol (v2 supports standard web fetch headers on modern nodes)
-  const url = `https://api.adsb.lol/v2/point/${center.lat.toFixed(4)}/${center.lng.toFixed(4)}/${radiusNm}`;
+  // Format coordinates cleanly to 2 decimal places to ensure robust API matching
+  const lat = center.lat.toFixed(2);
+  const lng = center.lng.toFixed(2);
+  const radiusNm = 100; // Expanded radius to guarantee catching regional traffic around Barcelona
+
+  const url = `https://api.adsb.one/v2/point/${lat}/${lng}/${radiusNm}`;
 
   try {
-    const res = await fetch(url, { mode: 'cors' });
+    const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
 
@@ -376,8 +379,8 @@ async function loadAircraft(){
     updateMarkers(list);
     $("acCount").textContent = list.length.toLocaleString() + " aircraft";
   } catch(e) {
-    console.error("Live fetch error:", e);
-    $("acCount").textContent = "API error (check view)";
+    console.error("Live fetch failed:", e);
+    $("acCount").textContent = "offline — retrying";
   }
 }
 
