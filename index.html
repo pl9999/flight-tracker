@@ -361,25 +361,40 @@ function startPolling(){
 
 async function loadAircraft(){
   if(!map) return;
-  const center = map.getCenter();
-  const lat = center.lat.toFixed(2);
-  const lng = center.lng.toFixed(2);
-  const radiusNm = 100;
+  const bounds = map.getBounds();
 
-  const targetUrl = `https://api.adsb.one/v2/point/${lat}/${lng}/${radiusNm}`;
-  const url = `https://corsproxy.io/?` + encodeURIComponent(targetUrl);
+  // OpenSky uses bounding boxes instead of center/radius: [ymin, xmin, ymax, xmax]
+  const lamin = bounds.getSouth().toFixed(2);
+  const lomin = bounds.getWest().toFixed(2);
+  const lamax = bounds.getNorth().toFixed(2);
+  const lomax = bounds.getEast().toFixed(2);
+
+  const url = `https://opensky-network.org/api/states/all?lamin=${lamin}&lomin=${lomin}&lamax=${lamax}&lomax=${lomax}`;
 
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
 
-    const list = data.ac || [];
+    // OpenSky returns states as an array inside data.states
+    const rawStates = data.states || [];
+
+    // Map OpenSky's array format into the object structure your marker code expects
+    const list = rawStates.map(s => ({
+      hex: s[0],
+      flight: (s[1] || "").trim(),
+      lat: s[6],
+      lon: s[5],
+      alt_baro: s[7] ? s[7] * 3.28084 : null, // Convert meters to feet
+      gs: s[9] ? s[9] * 1.94384 : null,         // Convert m/s to knots
+      track: s[10]
+    }));
+
     updateMarkers(list);
     $("acCount").textContent = list.length.toLocaleString() + " aircraft";
   } catch(e) {
-    console.error("Live fetch failed:", e);
-    $("acCount").textContent = "API error (check view)";
+    console.error("OpenSky fetch failed:", e);
+    $("acCount").textContent = "offline — retrying";
   }
 }
 
