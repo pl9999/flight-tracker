@@ -360,23 +360,37 @@ function startPolling(){
 }
 
 async function loadAircraft(){
-  if(!map) return;
+  if(!map) {
+    console.warn("Map not initialized yet.");
+    return;
+  }
+
   const center = map.getCenter();
+  if(!center || isNaN(center.lat) || isNaN(center.lng)) {
+    console.warn("Invalid map center coordinates.");
+    return;
+  }
+
+  const lat = center.lat.toFixed(4);
+  const lon = center.lng.toFixed(4);
   const radiusNm = 50;
 
-  const targetUrl = `https://api.airplanes.live/v2/point/${center.lat.toFixed(4)}/${center.lng.toFixed(4)}/${radiusNm}`;
-  const url = `https://corsproxy.io/?` + encodeURIComponent(targetUrl);
+  const url = `https://api.airplanes.live/v2/point/${lat}/${lon}/${radiusNm}`;
+  console.log("Fetching live data from:", url);
 
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
 
+    // Log response structure to verify incoming data
+    console.log("API Response received:", data);
+
     const list = data.ac || [];
     updateMarkers(list);
     $("acCount").textContent = list.length.toLocaleString() + " aircraft";
   } catch(e) {
-    console.error("Live fetch failed:", e);
+    console.error("Live fetch failed details:", e);
     $("acCount").textContent = "offline — retrying";
   }
 }
