@@ -363,7 +363,8 @@ async function loadAircraft(){
   if(!map) return;
   const center = map.getCenter();
   const radiusNm = 50;
-  const url = `https://api.adsb.one/v2/point/${center.lat.toFixed(4)}/${center.lng.toFixed(4)}/${radiusNm}`;
+  // Airplanes.live open point endpoint optimized for client web usage
+  const url = `https://api.airplanes.live/v2/point/${center.lat.toFixed(4)}/${center.lng.toFixed(4)}/${radiusNm}`;
 
   try {
     const res = await fetch(url);
