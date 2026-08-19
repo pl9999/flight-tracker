@@ -363,8 +363,12 @@ async function loadAircraft(){
   if(!map) return;
   const center = map.getCenter();
   const radiusNm = 50;
-  // Airplanes.live open point endpoint optimized for client web usage
-  const url = `https://api.airplanes.live/v2/point/${center.lat.toFixed(4)}/${center.lng.toFixed(4)}/${radiusNm}`;
+
+  // Target live endpoint
+  const targetUrl = `https://api.airplanes.live/v2/point/${center.lat.toFixed(4)}/${center.lng.toFixed(4)}/${radiusNm}`;
+
+  // Route through a public CORS wrapper so the browser allows the response
+  const url = `https://corsproxy.io/?` + encodeURIComponent(targetUrl);
 
   try {
     const res = await fetch(url);
